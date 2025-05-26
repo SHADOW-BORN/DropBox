@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://dggeangw2lve"]
+
+[ext_resource type="Texture2D" uid="uid://bp2xy1b8aflqs" path="res://tanr-makina-factory-building/textures/Polished_Concrete_New.jpeg" id="1_idj7w"]
+[ext_resource type="ArrayMesh" uid="uid://dwor5yo4y2du5" path="res://tanr-makina-factory-building/source/TANIRMAKİNADUVARİŞLERİ/aaaa.obj" id="2_kln2b"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rgh2o"]
+albedo_texture = ExtResource("1_idj7w")
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Aaaa" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.0927, -1.36089, 23.1808)
+material_override = SubResource("StandardMaterial3D_rgh2o")
+mesh = ExtResource("2_kln2b")

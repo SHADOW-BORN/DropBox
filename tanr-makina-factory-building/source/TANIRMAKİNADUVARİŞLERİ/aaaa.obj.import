@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dwor5yo4y2du5"
+path="res://.godot/imported/aaaa.obj-f636f1111323a80168479876602f635f.mesh"
+
+[deps]
+
+files=["res://.godot/imported/aaaa.obj-f636f1111323a80168479876602f635f.mesh"]
+
+source_file="res://tanr-makina-factory-building/source/TANIRMAKİNADUVARİŞLERİ/aaaa.obj"
+dest_files=["res://.godot/imported/aaaa.obj-f636f1111323a80168479876602f635f.mesh", "res://.godot/imported/aaaa.obj-f636f1111323a80168479876602f635f.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(10, 10, 10)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false
