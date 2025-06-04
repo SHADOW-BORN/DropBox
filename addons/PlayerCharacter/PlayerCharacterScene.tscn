@@ -1,7 +1,8 @@
-[gd_scene load_steps=19 format=3 uid="uid://bwggrf7sbmkcv"]
+[gd_scene load_steps=20 format=3 uid="uid://bwggrf7sbmkcv"]
 
 [ext_resource type="Script" uid="uid://d3s8yxuvpmekm" path="res://addons/PlayerCharacter/StateMachine/PlayerCharacterScript.gd" id="1_h128t"]
 [ext_resource type="Script" uid="uid://b0fbr48rbvn27" path="res://addons/PlayerCharacter/Camera/CameraScript.gd" id="2_x12n0"]
+[ext_resource type="PackedScene" uid="uid://b4ai21rey2txr" path="res://addons/PlayerCharacter/model.gltf" id="12_17hed"]
 [ext_resource type="Script" uid="uid://dx02l6p6behb8" path="res://addons/PlayerCharacter/UI/HUDScript.gd" id="16_5jm78"]
 [ext_resource type="FontFile" uid="uid://bwr73i28ligrq" path="res://addons/Arts/Ticketing.ttf" id="17_ryxgj"]
 [ext_resource type="Script" uid="uid://sca7ypsol83f" path="res://addons/PlayerCharacter/StateMachine/StateMachineScript.gd" id="54_e0r17"]
@@ -44,6 +45,7 @@ outline_size = 1
 outline_color = Color(0, 0, 0, 1)
 
 [node name="PlayerCharacter" type="CharacterBody3D" groups=["PlayerCharacter"]]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0.104657, 0)
 collision_layer = 2
 collision_mask = 97
 floor_block_on_wall = false
@@ -95,8 +97,6 @@ startFOV = 90.0
 baseCameraLerpSpeed = 8.0
 crouchCameraLerpSpeed = 8.0
 crouchCameraDepth = -0.6
-bobFrequency = 1.1
-bobAmplitude = 0.15
 camTiltRotationValue = 0.35
 camTiltRotationSpeed = 2.2
 onFloorTiltValDivider = 1.6
@@ -108,6 +108,9 @@ current = true
 fov = 90.0
 near = 0.01
 far = 1000.0
+
+[node name="GravityGun" parent="CameraHolder" instance=ExtResource("12_17hed")]
+transform = Transform3D(0.299747, 0, 0.0123168, 0, 0.3, 0, -0.0123168, 0, 0.299747, 0.371123, -0.396163, -0.219456)
 
 [node name="Hitbox" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_5yjma")
