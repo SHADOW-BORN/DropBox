@@ -34,7 +34,7 @@ The video showcasing the asset features : https://youtu.be/xq3AqMtmM_4
  - Coyote jump/time
  - Air control (easely customizable thanks to curves)
  - Bunny hopping (+ auto bunny hop)
-    
+	
  - Camera tilt
  - Camera bob
  - Custom FOV
