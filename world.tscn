@@ -1,0 +1,94 @@
+[gd_scene load_steps=16 format=3 uid="uid://nibfw1rg4hn2"]
+
+[ext_resource type="PackedScene" uid="uid://4neetmi1j8cv" path="res://addons/Collison.glb" id="1_fj7yv"]
+[ext_resource type="Texture2D" uid="uid://c4uv37kffysl0" path="res://tanr-makina-factory-building/textures/photo-metal-texture-pattern.jpg" id="2_aqk2v"]
+[ext_resource type="PackedScene" uid="uid://bwggrf7sbmkcv" path="res://addons/PlayerCharacter/PlayerCharacterScene.tscn" id="2_tlwt5"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_fj7yv"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_tlwt5"]
+sky_material = SubResource("ProceduralSkyMaterial_fj7yv")
+
+[sub_resource type="Environment" id="Environment_aqk2v"]
+background_mode = 2
+sky = SubResource("Sky_tlwt5")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_036b0"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dwbse"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pkg7o"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gbfbk"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ioo17"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wse8f"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ic0uy"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k3n1d"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tlwt5"]
+albedo_texture = ExtResource("2_aqk2v")
+
+[node name="World" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_aqk2v")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Collison" parent="." instance=ExtResource("1_fj7yv")]
+
+[node name="aaaa" parent="Collison" index="0"]
+material_override = SubResource("StandardMaterial3D_036b0")
+
+[node name="aaaa_648" parent="Collison" index="648"]
+material_override = SubResource("StandardMaterial3D_dwbse")
+
+[node name="aaaa_649" parent="Collison" index="649"]
+material_override = SubResource("StandardMaterial3D_pkg7o")
+
+[node name="aaaa_650" parent="Collison" index="650"]
+material_override = SubResource("StandardMaterial3D_gbfbk")
+
+[node name="aaaa_651" parent="Collison" index="651"]
+material_override = SubResource("StandardMaterial3D_ioo17")
+
+[node name="aaaa_652" parent="Collison" index="652"]
+material_override = SubResource("StandardMaterial3D_wse8f")
+
+[node name="aaaa_653" parent="Collison" index="653"]
+material_override = SubResource("StandardMaterial3D_ic0uy")
+
+[node name="aaaa_654" parent="Collison" index="654"]
+material_override = SubResource("StandardMaterial3D_k3n1d")
+
+[node name="aaaa_655" parent="Collison" index="655"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -31.4807, 0)
+
+[node name="aaaa_656" parent="Collison" index="656"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -11.4177, 0)
+
+[node name="aaaa_657" parent="Collison" index="657"]
+material_override = SubResource("StandardMaterial3D_tlwt5")
+
+[node name="PlayerCharacter" parent="." instance=ExtResource("2_tlwt5")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.85811, 0.92, -2.53481)
+
+[editable path="Collison"]

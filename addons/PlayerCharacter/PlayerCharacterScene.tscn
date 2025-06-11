@@ -1,7 +1,8 @@
-[gd_scene load_steps=20 format=3 uid="uid://bwggrf7sbmkcv"]
+[gd_scene load_steps=21 format=3 uid="uid://bwggrf7sbmkcv"]
 
 [ext_resource type="Script" uid="uid://d3s8yxuvpmekm" path="res://addons/PlayerCharacter/StateMachine/PlayerCharacterScript.gd" id="1_h128t"]
 [ext_resource type="Script" uid="uid://b0fbr48rbvn27" path="res://addons/PlayerCharacter/Camera/CameraScript.gd" id="2_x12n0"]
+[ext_resource type="Script" uid="uid://dvh8y7jfbo0lk" path="res://addons/PlayerCharacter/Gravity_Gun.gd" id="4_ypkm2"]
 [ext_resource type="PackedScene" uid="uid://b4ai21rey2txr" path="res://addons/PlayerCharacter/model.gltf" id="12_17hed"]
 [ext_resource type="Script" uid="uid://dx02l6p6behb8" path="res://addons/PlayerCharacter/UI/HUDScript.gd" id="16_5jm78"]
 [ext_resource type="FontFile" uid="uid://bwr73i28ligrq" path="res://addons/Arts/Ticketing.ttf" id="17_ryxgj"]
@@ -111,6 +112,7 @@ far = 1000.0
 
 [node name="GravityGun" parent="CameraHolder/Camera" instance=ExtResource("12_17hed")]
 transform = Transform3D(0.209823, 0, 0.00862176, 0, 0.21, 0, -0.00862176, 0, 0.209823, 0.259786, -0.277314, -0.153619)
+script = ExtResource("4_ypkm2")
 
 [node name="Hitbox" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_5yjma")
