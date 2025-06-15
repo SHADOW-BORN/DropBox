@@ -71,7 +71,6 @@ var coyoteJumpOn : bool = false
 @export var runAction : String = ""
 @export var crouchAction : String = ""
 @export var jumpAction : String = ""
-
 #references variables
 @onready var camHolder : Node3D = $CameraHolder
 @onready var model : MeshInstance3D = $Model
@@ -80,6 +79,42 @@ var coyoteJumpOn : bool = false
 @onready var hud : CanvasLayer = $HUD
 @onready var ceilingCheck : RayCast3D = $Raycasts/CeilingCheck
 @onready var floorCheck : RayCast3D = $Raycasts/FloorCheck
+@onready var camera = $CameraHolder/Camera
+
+@export_category("Holding Objects")
+@export var ThrowForce = 2.0
+@export var FollowSpeed = 4.0
+@export var FollowDistance = 4.0
+@export var MaxDistanceFromCamera = 7.0
+@export var dropBelowPlayer = false
+@export var GroundRay : RayCast3D
+
+@onready var interactRay = $CameraHolder/Camera/InteractRay
+var heldObject : RigidBody3D
+
+func set_held_object(body):
+	if body is RigidBody3D:
+		heldObject = body
+func drop_held_object():
+	heldObject = null
+func throw_held_object():
+	var obj = heldObject
+	drop_held_object()
+	obj.apply_central_impulse(-camera.global_transform.basis.z * ThrowForce * 10)
+func handle_holding_objects():
+	if Input.is_action_just_pressed("throw"):
+		if heldObject != null: throw_held_object()
+	if Input.is_action_just_pressed("interact"):
+		if heldObject != null: drop_held_object()
+	elif interactRay.is_colliding(): set_held_object(interactRay.get_collider())
+	if heldObject != null:
+		var targetPos = camera.global_transform.origin + (camera.global_basis * Vector3(0, 0, -FollowDistance))
+		var objectPos = heldObject.global_transform.origin
+		heldObject.linear_velocity = (targetPos - objectPos) * FollowSpeed
+		if heldObject.global_position.distance_to(camera.global_position) > MaxDistanceFromCamera:
+			drop_held_object()
+		if dropBelowPlayer && GroundRay.is_colliding():
+			if GroundRay.get_collider() == heldObject: drop_held_object()
 
 func _ready():
 	#set move variables, and value references
@@ -97,6 +132,7 @@ func _process(_delta: float):
 	
 func _physics_process(_delta : float):
 	modifyPhysicsProperties()
+	handle_holding_objects()
 	
 	move_and_slide()
 	
