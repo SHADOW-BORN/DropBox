@@ -84,7 +84,7 @@ var coyoteJumpOn : bool = false
 @export_category("Holding Objects")
 @export var ThrowForce = 2.0
 @export var FollowSpeed = 4.0
-@export var FollowDistance = 4.0
+@export var FollowDistance = 3.0
 @export var MaxDistanceFromCamera = 7.0
 @export var dropBelowPlayer = false
 @export var GroundRay : RayCast3D

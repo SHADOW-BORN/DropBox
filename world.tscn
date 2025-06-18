@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://blyg7rlhs14cp"]
+[gd_scene load_steps=19 format=3 uid="uid://blyg7rlhs14cp"]
 
 [ext_resource type="PackedScene" uid="uid://4neetmi1j8cv" path="res://addons/Collison.glb" id="1_fj7yv"]
 [ext_resource type="Texture2D" uid="uid://c4uv37kffysl0" path="res://tanr-makina-factory-building/textures/photo-metal-texture-pattern.jpg" id="2_aqk2v"]
@@ -45,6 +45,9 @@ albedo_texture = ExtResource("2_aqk2v")
 albedo_texture = ExtResource("2_aqk2v")
 
 [sub_resource type="BoxMesh" id="BoxMesh_tlwt5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aqk2v"]
+albedo_color = Color(0.602508, 0.314143, 0, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tlwt5"]
 
@@ -102,6 +105,7 @@ mass = 0.5
 [node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = SubResource("BoxMesh_tlwt5")
+surface_material_override/0 = SubResource("StandardMaterial3D_aqk2v")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
