@@ -82,7 +82,7 @@ var coyoteJumpOn : bool = false
 @onready var camera = $CameraHolder/Camera
 
 @export_category("Holding Objects")
-@export var ThrowForce = 2.0
+@export var ThrowForce = 1.0
 @export var FollowSpeed = 4.0
 @export var FollowDistance = 3.0
 @export var MaxDistanceFromCamera = 7.0
