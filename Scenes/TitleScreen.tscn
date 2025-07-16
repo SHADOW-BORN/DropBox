@@ -101,3 +101,5 @@ theme_override_styles/hover = SubResource("StyleBoxEmpty_8l4an")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_n15yj")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_emot1")
 text = "Exit Game"
+
+[node name="Bac" type="Node3D" parent="."]

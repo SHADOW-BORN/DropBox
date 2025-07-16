@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="DropBox"
-run/main_scene="uid://blyg7rlhs14cp"
+run/main_scene="uid://clfystlq83ulk"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
