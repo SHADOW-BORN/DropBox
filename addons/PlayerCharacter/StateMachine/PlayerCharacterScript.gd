@@ -80,6 +80,7 @@ var coyoteJumpOn : bool = false
 @onready var ceilingCheck : RayCast3D = $Raycasts/CeilingCheck
 @onready var floorCheck : RayCast3D = $Raycasts/FloorCheck
 @onready var camera = $CameraHolder/Camera
+@onready var timer: Timer = $Timer
 
 @export_category("Holding Objects")
 @export var ThrowForce = 1.0
@@ -93,8 +94,10 @@ var coyoteJumpOn : bool = false
 var heldObject : RigidBody3D
 
 func set_held_object(body):
-	if body is RigidBody3D:
+	if body is RigidBody3D and timer.is_stopped():
 		heldObject = body
+	else:
+		pass #play sound effect or smth
 func drop_held_object():
 	heldObject = null
 func throw_held_object():
@@ -103,9 +106,13 @@ func throw_held_object():
 	obj.apply_central_impulse(-camera.global_transform.basis.z * ThrowForce * 10)
 func handle_holding_objects():
 	if Input.is_action_just_pressed("throw"):
-		if heldObject != null: throw_held_object()
+		if heldObject != null: 
+			throw_held_object()
+			if timer.is_stopped(): timer.start()
 	if Input.is_action_just_pressed("interact"):
-		if heldObject != null: drop_held_object()
+		if heldObject != null: 
+			drop_held_object()
+			if timer.is_stopped(): timer.start()
 	elif interactRay.is_colliding(): set_held_object(interactRay.get_collider())
 	if heldObject != null:
 		var targetPos = camera.global_transform.origin + (camera.global_basis * Vector3(0, 0, -FollowDistance))

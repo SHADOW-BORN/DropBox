@@ -133,6 +133,10 @@ transform = Transform3D(0.998336, 0.0410528, 0.0405035, -0.0410518, 0.0126007, 0
 mesh = SubResource("CylinderMesh_ypkm2")
 surface_material_override/0 = SubResource("StandardMaterial3D_2rfya")
 
+[node name="OmniLight3D" type="OmniLight3D" parent="CameraHolder/Camera/GravityGun"]
+transform = Transform3D(4.7619, 0, -1.49012e-08, 0, 4.7619, 0, 1.49012e-08, 0, 4.7619, 0.0161419, 0.454348, -0.392836)
+light_color = Color(0.950403, 0.526127, 5.77569e-07, 1)
+
 [node name="InteractRay" type="RayCast3D" parent="CameraHolder/Camera"]
 target_position = Vector3(0, 0, -5)
 
@@ -310,3 +314,7 @@ vertical_alignment = 1
 [node name="Ground Ray" type="RayCast3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.813596, 0)
 target_position = Vector3(0, -0.1, 0)
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.5
+one_shot = true
