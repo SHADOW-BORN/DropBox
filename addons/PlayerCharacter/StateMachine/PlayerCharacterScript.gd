@@ -75,10 +75,9 @@ var coyoteJumpOn : bool = false
 # NEW BEAM VARIABLES
 @export_category("Beam Effect")
 @export var gunMarker : Marker3D  # Assign your gun marker here!
-@export var beamColor : Color = Color.ORANGE
+@export var beamColor : Color = Color(1.0, 0.5, 0.0, 0.6)  # Semi-transparent orange
 @export var beamWidth : float = 0.1
 @export var beamGlowIntensity : float = 2.0
-@export var beamFlickerSpeed : float = 5.0
 @export var enableBeamParticles : bool = true
 @export var deformSpeed : float = 3.0
 @export var deformStrength : float = 0.1
@@ -103,7 +102,7 @@ var beamShader : Shader
 
 @export_category("Holding Objects")
 @export var ThrowForce = 1.0
-@export var FollowSpeed = 4.0
+@export var FollowSpeed = 10
 @export var FollowDistance = 3.0
 @export var MaxDistanceFromCamera = 7.0
 @export var dropBelowPlayer = false
@@ -167,10 +166,10 @@ func setup_beam_effect():
 func create_beam_shader():
 	beamShader = Shader.new()
 	var shader_code = """
-shader_type canvas_item;
-render_mode blend_add, depth_draw_opaque, depth_test_disabled, diffuse_burley, specular_schlick_ggx;
+shader_type spatial;
+render_mode blend_add, depth_draw_opaque, depth_test_disabled, diffuse_burley, specular_schlick_ggx, unshaded;
 
-uniform vec4 beam_color : source_color = vec4(1.0, 0.5, 0.0, 1.0);
+uniform vec4 beam_color : source_color = vec4(1.0, 0.5, 0.0, 0.6);
 uniform float emission_intensity : hint_range(0.0, 10.0) = 2.0;
 uniform float time : hint_range(0.0, 100.0) = 0.0;
 uniform float deform_speed : hint_range(0.1, 10.0) = 3.0;
@@ -182,11 +181,14 @@ varying vec3 local_vertex;
 void vertex() {
 	local_vertex = VERTEX;
 	
-	// Create wavy deformation
-	float wave1 = sin(time * deform_speed + local_vertex.y * 5.0) * deform_strength;
-	float wave2 = cos(time * deform_speed * 1.3 + local_vertex.y * 3.0 + 1.57) * deform_strength * 0.7;
+	// Normalize Y position from -0.5 to 0.5 (cylinder height) to 0.0 to 1.0
+	float distance_factor = (local_vertex.y + 0.5);
 	
-	// Apply deformation to X and Z
+	// Create wavy deformation that increases towards the target (higher Y values)
+	float wave1 = sin(time * deform_speed + local_vertex.y * 5.0) * deform_strength * distance_factor * distance_factor;
+	float wave2 = cos(time * deform_speed * 1.3 + local_vertex.y * 3.0 + 1.57) * deform_strength * 0.7 * distance_factor * distance_factor;
+	
+	// Apply deformation to X and Z, but only at the far end
 	VERTEX.x += wave1;
 	VERTEX.z += wave2;
 	
@@ -194,25 +196,20 @@ void vertex() {
 }
 
 void fragment() {
-	// Create pulsing effect
-	float pulse = sin(time * deform_speed * 2.0) * 0.3 + 0.7;
+	// No pulsing - constant intensity
 	
-	// Create vertical gradient
-	float gradient = 1.0 - abs(local_vertex.y);
-	gradient = smoothstep(0.0, 1.0, gradient);
+	// Create subtle gradient - slightly brighter at gun end, consistent orange throughout
+	float distance_factor = (local_vertex.y + 0.5);
+	float gradient = 1.0 - distance_factor * 0.1; // Very subtle fade
 	
-	// Combine effects
-	vec4 final_color = beam_color * emission_intensity * pulse * gradient;
+	// Consistent orange color
+	vec4 final_color = beam_color * emission_intensity * gradient;
 	
 	ALBEDO = final_color.rgb;
 	EMISSION = final_color.rgb;
-	ALPHA = final_color.a * 0.8;
+	ALPHA = beam_color.a; // Use the alpha from beam_color for consistent transparency
 }
 """
-	# For spatial shader, we need to change shader_type
-	shader_code = shader_code.replace("shader_type canvas_item;", "shader_type spatial;")
-	shader_code = shader_code.replace("render_mode blend_add, depth_draw_opaque, depth_test_disabled, diffuse_burley, specular_schlick_ggx;", 
-		"render_mode blend_add, depth_draw_opaque, depth_test_disabled, diffuse_burley, specular_schlick_ggx, unshaded;")
 	
 	beamShader.code = shader_code
 
@@ -281,17 +278,18 @@ func update_beam_effect(delta: float):
 	if abs(direction.dot(Vector3.UP)) > 0.99:
 		up_vector = Vector3.FORWARD
 	
-	# Create proper transform
+	# Create proper transform - NO INTERPOLATION for instant response
 	var beam_transform = Transform3D()
 	beam_transform.origin = beamMesh.global_position
 	beam_transform = beam_transform.looking_at(gunPos + direction, up_vector)
 	# Rotate 90 degrees around X to align cylinder properly (cylinder's Y-axis should point along beam)
 	beam_transform = beam_transform * Transform3D(Basis(Vector3.RIGHT, PI/2), Vector3.ZERO)
 	
+	# Apply transform immediately
 	beamMesh.global_transform = beam_transform
 	beamMesh.scale = Vector3(1, distance, 1)
 	
-	# Update particles to follow the beam
+	# Update particles to follow the beam instantly
 	if beamParticles:
 		beamParticles.global_transform = beam_transform
 		beamParticles.scale = Vector3(1, distance, 1)
@@ -300,14 +298,11 @@ func update_beam_effect(delta: float):
 		if processMaterial:
 			processMaterial.emission_box_extents = Vector3(beamWidth, distance * 0.5, beamWidth)
 	
-	# Update shader parameters
+	# Update shader parameters - only time for wave animation
 	beam_time += delta
 	if beamMaterial:
 		beamMaterial.set_shader_parameter("time", beam_time)
-		beamMaterial.set_shader_parameter("beam_color", beamColor)
-		beamMaterial.set_shader_parameter("emission_intensity", beamGlowIntensity)
-		beamMaterial.set_shader_parameter("deform_speed", deformSpeed)
-		beamMaterial.set_shader_parameter("deform_strength", deformStrength)
+		# No need to update other parameters every frame since they're constant now
 
 func hide_beam():
 	if beamMesh:
