@@ -59,7 +59,7 @@ font_size = 30
 outline_size = 1
 outline_color = Color(0, 0, 0, 1)
 
-[node name="PlayerCharacter" type="CharacterBody3D" groups=["PlayerCharacter"]]
+[node name="PlayerCharacter" type="CharacterBody3D" node_paths=PackedStringArray("gunMarker") groups=["PlayerCharacter"]]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
 collision_layer = 2
 collision_mask = 97
@@ -100,6 +100,7 @@ moveRightAction = "moveRight"
 runAction = "run"
 crouchAction = "crouch"
 jumpAction = "jump"
+gunMarker = NodePath("CameraHolder/Camera/GravityGun/Marker3D")
 
 [node name="CameraHolder" type="Node3D" parent="."]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0.55, 0)
@@ -139,6 +140,9 @@ surface_material_override/0 = SubResource("StandardMaterial3D_2rfya")
 [node name="OmniLight3D" type="OmniLight3D" parent="CameraHolder/Camera/GravityGun"]
 transform = Transform3D(4.7619, 0, -1.49012e-08, 0, 4.7619, 0, 1.49012e-08, 0, 4.7619, 0.0161419, 0.454348, -0.392836)
 light_color = Color(0.950403, 0.526127, 5.77569e-07, 1)
+
+[node name="Marker3D" type="Marker3D" parent="CameraHolder/Camera/GravityGun"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0515934, 0.444806, 1.2556)
 
 [node name="InteractRay" type="RayCast3D" parent="CameraHolder/Camera"]
 target_position = Vector3(0, 0, -5)
