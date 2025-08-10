@@ -100,9 +100,16 @@ var beamMaterial : ShaderMaterial
 var beamParticles : GPUParticles3D
 var beamShader : Shader
 
+@export_category("Scoring System")
+@export var scoreZone : Area3D  # Assign your scoring area
+@export var boxSpawnPoint : Marker3D  # Where boxes respawn
+@export var scoreSound : AudioStreamPlayer3D  # Optional sound effect
+@export var currentScore : int = 0
+var scoredObjects : Array[RigidBody3D] = []  # Track what we've scored
+
 @export_category("Holding Objects")
 @export var ThrowForce = 1.0
-@export var FollowSpeed = 10
+@export var FollowSpeed = 4.0
 @export var FollowDistance = 3.0
 @export var MaxDistanceFromCamera = 7.0
 @export var dropBelowPlayer = false
@@ -113,6 +120,7 @@ var heldObject : RigidBody3D
 
 func _ready():
 	setup_beam_effect()
+	setup_scoring_system()
 	#set move variables, and value references
 	moveSpeed = walkSpeed
 	moveAccel = walkAccel
@@ -122,6 +130,82 @@ func _ready():
 	jumpCooldownRef = jumpCooldown
 	nbJumpsInAirAllowedRef = nbJumpsInAirAllowed
 	coyoteJumpCooldownRef = coyoteJumpCooldown
+
+func setup_scoring_system():
+	# Connect to score zone if assigned
+	if scoreZone:
+		# Make sure the Area3D is set up correctly
+		scoreZone.monitoring = true
+		scoreZone.monitorable = true
+		
+		# Connect the body_entered signal to our scoring function
+		if not scoreZone.body_entered.is_connected(_on_score_zone_entered):
+			scoreZone.body_entered.connect(_on_score_zone_entered)
+		print("Scoring system initialized! Current score: ", currentScore)
+		print("Score zone monitoring: ", scoreZone.monitoring)
+	else:
+		print("Warning: Score Zone not assigned! Please assign an Area3D in the inspector.")
+
+func _on_score_zone_entered(body: Node3D):
+	print("Something entered score zone: ", body.name, " (Type: ", body.get_class(), ")")
+	
+	# Check if the body is a RigidBody3D
+	if body is RigidBody3D:
+		print("Detected RigidBody3D: ", body.name)
+		score_object(body as RigidBody3D)
+	else:
+		print("Object is not a RigidBody3D, ignoring.")
+
+func score_object(body: RigidBody3D):
+	print("Attempting to score object: ", body.name)
+	
+	# Prevent scoring the same object multiple times quickly
+	if body in scoredObjects:
+		print("Object already scored recently, ignoring.")
+		return
+	
+	# Add to scored objects temporarily
+	scoredObjects.append(body)
+	
+	# Remove from scored objects after a short delay to prevent double-scoring
+	get_tree().create_timer(0.5).timeout.connect(func(): scoredObjects.erase(body))
+	
+	# Increase score
+	currentScore += 1
+	print("SCORE! Current score: ", currentScore)
+	
+	# Play sound effect if assigned
+	if scoreSound:
+		scoreSound.play()
+	
+	# If this was the held object, drop it from gravity gun
+	if body == heldObject:
+		print("Dropping held object from gravity gun")
+		drop_held_object()
+	
+	# Respawn the object at spawn point
+	if boxSpawnPoint:
+		respawn_object(body)
+	else:
+		print("Warning: Box Spawn Point not assigned! Object will not respawn.")
+
+func respawn_object(body: RigidBody3D):
+	print("Respawning object: ", body.name)
+	
+	# Stop the object's movement
+	body.linear_velocity = Vector3.ZERO
+	body.angular_velocity = Vector3.ZERO
+	
+	# Move to spawn point
+	body.global_position = boxSpawnPoint.global_position
+	body.global_rotation = boxSpawnPoint.global_rotation
+	
+	print("Object moved to spawn position: ", boxSpawnPoint.global_position)
+	
+	# Optional: Add a little upward velocity so it doesn't spawn inside the ground
+	body.linear_velocity = Vector3(0, 2, 0)
+	
+	print("Object respawned successfully!")
 
 func setup_beam_effect():
 	# Check if gun marker is assigned
@@ -181,14 +265,16 @@ varying vec3 local_vertex;
 void vertex() {
 	local_vertex = VERTEX;
 	
-	// Normalize Y position from -0.5 to 0.5 (cylinder height) to 0.0 to 1.0
-	float distance_factor = (local_vertex.y + 0.5);
+	// Normalize Y position: cylinder goes from -0.5 to +0.5
+	// We want: -0.5 = gun end (no deformation), +0.5 = target end (max deformation)
+	float distance_factor = (local_vertex.y + 0.5); // Now 0.0 at gun, 1.0 at target
 	
-	// Create wavy deformation that increases towards the target (higher Y values)
+	// IMPORTANT: Only deform vertices, the mesh position stays locked to gun marker
+	// Create wavy deformation that ONLY affects the target end
 	float wave1 = sin(time * deform_speed + local_vertex.y * 5.0) * deform_strength * distance_factor * distance_factor;
 	float wave2 = cos(time * deform_speed * 1.3 + local_vertex.y * 3.0 + 1.57) * deform_strength * 0.7 * distance_factor * distance_factor;
 	
-	// Apply deformation to X and Z, but only at the far end
+	// Apply deformation to X and Z only - this moves vertices but not the mesh origin
 	VERTEX.x += wave1;
 	VERTEX.z += wave2;
 	
@@ -263,46 +349,45 @@ func update_beam_effect(delta: float):
 		beamParticles.visible = true
 		beamParticles.emitting = true
 	
-	# Get positions - start from gun marker instead of camera
+	# Get positions
 	var gunPos = gunMarker.global_position
 	var objectPos = heldObject.global_position
 	var distance = gunPos.distance_to(objectPos)
 	var direction = (objectPos - gunPos).normalized()
 	
-	# Position the beam at the midpoint
-	beamMesh.global_position = gunPos + (direction * distance * 0.5)
+	# CRITICAL FIX: Position the beam so its bottom (-0.5 Y) is EXACTLY at gun marker
+	# Instead of centering the beam, we offset it so the gun end stays fixed
+	var beam_center = gunPos + (direction * distance * 0.5)
 	
-	# Proper rotation: align the cylinder's Y-axis (height) with the beam direction
+	# Create the transform
 	var up_vector = Vector3.UP
-	# If direction is too close to up, use forward as reference
 	if abs(direction.dot(Vector3.UP)) > 0.99:
 		up_vector = Vector3.FORWARD
 	
-	# Create proper transform - NO INTERPOLATION for instant response
 	var beam_transform = Transform3D()
-	beam_transform.origin = beamMesh.global_position
-	beam_transform = beam_transform.looking_at(gunPos + direction, up_vector)
-	# Rotate 90 degrees around X to align cylinder properly (cylinder's Y-axis should point along beam)
+	beam_transform.origin = beam_center
+	beam_transform = beam_transform.looking_at(beam_center + direction, up_vector)
 	beam_transform = beam_transform * Transform3D(Basis(Vector3.RIGHT, PI/2), Vector3.ZERO)
 	
-	# Apply transform immediately
+	# Apply transform and scale
 	beamMesh.global_transform = beam_transform
 	beamMesh.scale = Vector3(1, distance, 1)
 	
-	# Update particles to follow the beam instantly
+	# The key insight: The mesh positioning makes the gun end stay at gunPos
+	# because we're scaling from center, so -0.5 * distance puts gun end at right spot
+	
+	# Update particles to match
 	if beamParticles:
-		beamParticles.global_transform = beam_transform
+		beamParticles.global_transform = beam_transform  
 		beamParticles.scale = Vector3(1, distance, 1)
-		# Update emission box size to match beam
 		var processMaterial = beamParticles.process_material as ParticleProcessMaterial
 		if processMaterial:
 			processMaterial.emission_box_extents = Vector3(beamWidth, distance * 0.5, beamWidth)
 	
-	# Update shader parameters - only time for wave animation
+	# Only update time for deformation
 	beam_time += delta
 	if beamMaterial:
 		beamMaterial.set_shader_parameter("time", beam_time)
-		# No need to update other parameters every frame since they're constant now
 
 func hide_beam():
 	if beamMesh:
@@ -365,6 +450,13 @@ func displayProperties():
 		hud.displayDesiredMoveSpeed(desiredMoveSpeed)
 		hud.displayVelocity(velocity.length())
 		hud.displayNbJumpsInAirAllowed(nbJumpsInAirAllowed)
+		# Display current score - only if HUD has the method
+		if hud.has_method("displayScore"):
+			hud.displayScore(currentScore)
+		else:
+			# Print score to console instead if HUD doesn't support it
+			if currentScore > 0:
+				print("Score: ", currentScore)
 		
 func modifyPhysicsProperties():
 	lastFramePosition = position #get play char position every frame

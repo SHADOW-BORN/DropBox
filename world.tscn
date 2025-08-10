@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://blyg7rlhs14cp"]
+[gd_scene load_steps=18 format=3 uid="uid://blyg7rlhs14cp"]
 
 [ext_resource type="PackedScene" uid="uid://4neetmi1j8cv" path="res://addons/Collison.glb" id="1_fj7yv"]
 [ext_resource type="Texture2D" uid="uid://c4uv37kffysl0" path="res://tanr-makina-factory-building/textures/photo-metal-texture-pattern.jpg" id="2_aqk2v"]
@@ -41,6 +41,9 @@ data = PackedVector3Array(-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tlwt5"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_aqk2v"]
+size = Vector3(0.274658, 2.29932, 0.617249)
+
 [node name="World" type="Node3D"]
 
 [node name="Collison" parent="." instance=ExtResource("1_fj7yv")]
@@ -78,26 +81,39 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -11.4177, 0)
 [node name="aaaa_657" parent="Collison" index="657"]
 material_override = SubResource("StandardMaterial3D_tlwt5")
 
-[node name="PlayerCharacter" parent="." instance=ExtResource("2_tlwt5")]
+[node name="PlayerCharacter" parent="." node_paths=PackedStringArray("scoreZone", "boxSpawnPoint") instance=ExtResource("2_tlwt5")]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.85811, 0.92, -2.53481)
+scoreZone = NodePath("../ScoreZone")
+boxSpawnPoint = NodePath("../Marker3D")
 
-[node name="RigidBody3D" type="RigidBody3D" parent="."]
+[node name="BrownBox" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.14602, 0.723002, -6.99905)
 mass = 0.5
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BrownBox"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = SubResource("BoxMesh_tlwt5")
 surface_material_override/0 = SubResource("StandardMaterial3D_aqk2v")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="RigidBody3D/MeshInstance3D"]
+[node name="StaticBody3D" type="StaticBody3D" parent="BrownBox/MeshInstance3D"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D/MeshInstance3D/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BrownBox/MeshInstance3D/StaticBody3D"]
 shape = SubResource("ConcavePolygonShape3D_tlwt5")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BrownBox"]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shape = SubResource("BoxShape3D_tlwt5")
 debug_color = Color(1, 1, 1, 0.42)
+
+[node name="ScoreZone" type="Area3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 15.7568, 2.1282, -9.98404)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ScoreZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0290375, -0.801183, 1.68914)
+shape = SubResource("BoxShape3D_aqk2v")
+debug_color = Color(1.54018e-06, 0.736257, 0.857059, 0.42)
+
+[node name="Marker3D" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.42272, 1.30553, -7.4075)
 
 [editable path="Collison"]
