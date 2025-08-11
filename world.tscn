@@ -1,8 +1,10 @@
-[gd_scene load_steps=18 format=3 uid="uid://blyg7rlhs14cp"]
+[gd_scene load_steps=25 format=3 uid="uid://blyg7rlhs14cp"]
 
 [ext_resource type="PackedScene" uid="uid://4neetmi1j8cv" path="res://addons/Collison.glb" id="1_fj7yv"]
 [ext_resource type="Texture2D" uid="uid://c4uv37kffysl0" path="res://tanr-makina-factory-building/textures/photo-metal-texture-pattern.jpg" id="2_aqk2v"]
 [ext_resource type="PackedScene" uid="uid://bwggrf7sbmkcv" path="res://addons/PlayerCharacter/PlayerCharacterScene.tscn" id="2_tlwt5"]
+[ext_resource type="Shader" uid="uid://ddwv8s3jr7mbf" path="res://world.gdshader" id="4_aqk2v"]
+[ext_resource type="Shader" uid="uid://dgao74rx41xyo" path="res://DestroyBox.gdshader" id="5_036b0"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_036b0"]
 albedo_texture = ExtResource("2_aqk2v")
@@ -41,8 +43,41 @@ data = PackedVector3Array(-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tlwt5"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_aqk2v"]
-size = Vector3(0.274658, 2.29932, 0.617249)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_036b0"]
+render_priority = 0
+shader = ExtResource("4_aqk2v")
+shader_parameter/glow_intensity = 3.023
+shader_parameter/edge_thickness = 0.57
+shader_parameter/wave_speed = 1.446
+shader_parameter/wave_amplitude = 0.0
+shader_parameter/wave_frequency = 8.0
+shader_parameter/surface_distortion = 1.615
+shader_parameter/glow_color = Color(0.698362, 0.932367, 1.54018e-06, 1)
+shader_parameter/transparency = 0.404
+
+[sub_resource type="BoxMesh" id="BoxMesh_dwbse"]
+material = SubResource("ShaderMaterial_036b0")
+size = Vector3(1.645, 3, 1.94)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_pkg7o"]
+data = PackedVector3Array(-0.8225, 1.5, 0.97, 0.8225, 1.5, 0.97, -0.8225, -1.5, 0.97, 0.8225, 1.5, 0.97, 0.8225, -1.5, 0.97, -0.8225, -1.5, 0.97, 0.8225, 1.5, -0.97, -0.8225, 1.5, -0.97, 0.8225, -1.5, -0.97, -0.8225, 1.5, -0.97, -0.8225, -1.5, -0.97, 0.8225, -1.5, -0.97, 0.8225, 1.5, 0.97, 0.8225, 1.5, -0.97, 0.8225, -1.5, 0.97, 0.8225, 1.5, -0.97, 0.8225, -1.5, -0.97, 0.8225, -1.5, 0.97, -0.8225, 1.5, -0.97, -0.8225, 1.5, 0.97, -0.8225, -1.5, -0.97, -0.8225, 1.5, 0.97, -0.8225, -1.5, 0.97, -0.8225, -1.5, -0.97, 0.8225, 1.5, 0.97, -0.8225, 1.5, 0.97, 0.8225, 1.5, -0.97, -0.8225, 1.5, 0.97, -0.8225, 1.5, -0.97, 0.8225, 1.5, -0.97, -0.8225, -1.5, 0.97, 0.8225, -1.5, 0.97, -0.8225, -1.5, -0.97, 0.8225, -1.5, 0.97, 0.8225, -1.5, -0.97, -0.8225, -1.5, -0.97)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dwbse"]
+render_priority = 0
+shader = ExtResource("5_036b0")
+shader_parameter/glow_intensity = 3.023
+shader_parameter/edge_thickness = 0.57
+shader_parameter/wave_speed = 1.446
+shader_parameter/wave_amplitude = 0.0
+shader_parameter/wave_frequency = 8.0
+shader_parameter/surface_distortion = 1.615
+shader_parameter/glow_color = Color(0.895388, 0, 0.129291, 1)
+shader_parameter/transparency = 0.404
+
+[sub_resource type="BoxMesh" id="BoxMesh_pkg7o"]
+material = SubResource("ShaderMaterial_dwbse")
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_gbfbk"]
 
 [node name="World" type="Node3D"]
 
@@ -83,7 +118,7 @@ material_override = SubResource("StandardMaterial3D_tlwt5")
 
 [node name="PlayerCharacter" parent="." node_paths=PackedStringArray("scoreZone", "boxSpawnPoint") instance=ExtResource("2_tlwt5")]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.85811, 0.92, -2.53481)
-scoreZone = NodePath("../ScoreZone")
+scoreZone = NodePath("../DeliverBoxZone")
 boxSpawnPoint = NodePath("../Marker3D")
 
 [node name="BrownBox" type="RigidBody3D" parent="."]
@@ -105,15 +140,27 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 shape = SubResource("BoxShape3D_tlwt5")
 debug_color = Color(1, 1, 1, 0.42)
 
-[node name="ScoreZone" type="Area3D" parent="."]
-transform = Transform3D(10, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 15.7568, 2.1282, -9.98404)
+[node name="DeliverBoxZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.7568, 2.1282, -9.74418)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScoreZone"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0290375, -0.801183, 1.68914)
-shape = SubResource("BoxShape3D_aqk2v")
-debug_color = Color(1.54018e-06, 0.736257, 0.857059, 0.42)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DeliverBoxZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.02204, -0.535037, 0)
+mesh = SubResource("BoxMesh_dwbse")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeliverBoxZone"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.02204, -0.535037, 0)
+shape = SubResource("ConcavePolygonShape3D_pkg7o")
 
 [node name="Marker3D" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.42272, 1.30553, -7.4075)
+
+[node name="DestroyBoxZone" type="Area3D" parent="."]
+transform = Transform3D(1.6, 0, 0, 0, 3, 0, 0, 0, 2, 0.82004, 1.60064, -9.75843)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DestroyBoxZone"]
+mesh = SubResource("BoxMesh_pkg7o")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DestroyBoxZone"]
+shape = SubResource("ConcavePolygonShape3D_gbfbk")
 
 [editable path="Collison"]
