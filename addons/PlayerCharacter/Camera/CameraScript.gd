@@ -1,18 +1,14 @@
 extends Node3D
-
 #class name
 class_name CameraObject 
-
 #camera variables
 @export_group("Camera variables")
 @export var XAxisSensibility : float
 @export var YAxisSensibility : float
 @export var maxUpAngleView : float
 @export var maxDownAngleView : float
-
 @export_group("FOV variables")
 @export var startFOV : float
-
 #movement changes variables
 @export_group("Movement changes variables")
 @export var baseCamAngle : float
@@ -20,28 +16,23 @@ class_name CameraObject
 @export var crouchCamAngle : float
 @export var crouchCameraLerpSpeed : float
 @export var crouchCameraDepth : float 
-
 #bob variables
 @export_group("Camera bob variables")
 var headBobValue : float
 @export var bobFrequency : float
 @export var bobAmplitude : float
-
 #tilt variables
 @export_group("Camera tilt variables")
 @export var camTiltRotationValue : float 
 @export var camTiltRotationSpeed : float
 @export var onFloorTiltValDivider : float
-
 @export_group("Mouse variables")
 var mouseFree : bool = false
-
 @export_group("Keybind variables")
 @export var mouseModeAction : String = ""
-
 #references variables
 @onready var camera : Camera3D = $Camera
-@onready var playChar : PlayerCharacter = $".."
+@onready var playChar : Player = $".."  # Fixed: Changed PlayerCharacter to Player
 @onready var hud : CanvasLayer = $"../HUD"
 
 func _ready():
@@ -49,7 +40,7 @@ func _ready():
 	
 	camera.fov = startFOV
 	
-func _unhandled_input(event):
+func _unhandled_input(event):  # Fixed: Removed asterisks
 	#manage camera rotation (360 on x axis, blocked at specified values on y axis, to not having the character do a complete head turn, which will be kinda weird)
 	if event is InputEventMouseMotion:
 		rotate_y(-event.relative.x * (XAxisSensibility / 10))
@@ -87,12 +78,17 @@ func headbob(time):
 	return pos
 	
 func cameraTilt(delta): 
-	#tmanage the camera tilting when the character is moving on the x axis (left and right)
-	if !playChar.is_on_floor(): rotation.z = lerp(rotation.z, -playChar.inputDirection.x * camTiltRotationValue/onFloorTiltValDivider, camTiltRotationSpeed * delta)
-	else: rotation.z = lerp(rotation.z, -playChar.inputDirection.x * camTiltRotationValue, camTiltRotationSpeed * delta)
+	#manage the camera tilting when the character is moving on the x axis (left and right)
+	if !playChar.is_on_floor(): 
+		rotation.z = lerp(rotation.z, -playChar.inputDirection.x * camTiltRotationValue/onFloorTiltValDivider, camTiltRotationSpeed * delta)
+	else: 
+		rotation.z = lerp(rotation.z, -playChar.inputDirection.x * camTiltRotationValue, camTiltRotationSpeed * delta)
 
 func mouseMode():
 	#manage the mouse mode (visible = can use mouse on the screen, captured = mouse not visible and locked in at the center of the screen)
-	if Input.is_action_just_pressed(mouseModeAction): mouseFree = !mouseFree
-	if !mouseFree: Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	else: Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if Input.is_action_just_pressed(mouseModeAction): 
+		mouseFree = !mouseFree
+	if !mouseFree: 
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	else: 
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)

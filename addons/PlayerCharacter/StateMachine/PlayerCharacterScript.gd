@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-class_name PlayerCharacter 
+class_name Player 
 
 @export_group("Movement variables")
 var moveSpeed : float
@@ -83,16 +83,16 @@ var coyoteJumpOn : bool = false
 @export var deformStrength : float = 0.1
 var beam_time : float = 0.0  # Custom timer for beam animation
 
-#references variables
-@onready var camHolder : Node3D = $CameraHolder
-@onready var model : MeshInstance3D = $Model
-@onready var hitbox : CollisionShape3D = $Hitbox
-@onready var stateMachine : Node = $StateMachine
-@onready var hud : CanvasLayer = $HUD
-@onready var ceilingCheck : RayCast3D = $Raycasts/CeilingCheck
-@onready var floorCheck : RayCast3D = $Raycasts/FloorCheck
-@onready var camera = $CameraHolder/Camera
-@onready var timer: Timer = $Timer
+#references variables - with safety checks
+@onready var camHolder : Node3D = get_node_or_null("CameraHolder")
+@onready var model : MeshInstance3D = get_node_or_null("Model")
+@onready var hitbox : CollisionShape3D = get_node_or_null("Hitbox")
+@onready var stateMachine : Node = get_node_or_null("StateMachine")
+@onready var hud : CanvasLayer = get_node_or_null("HUD")
+@onready var ceilingCheck : RayCast3D = get_node_or_null("Raycasts/CeilingCheck")
+@onready var floorCheck : RayCast3D = get_node_or_null("Raycasts/FloorCheck")
+@onready var camera = get_node_or_null("CameraHolder/Camera")
+@onready var timer: Timer = get_node_or_null("Timer")
 
 # NEW BEAM REFERENCES
 var beamMesh : MeshInstance3D
@@ -100,12 +100,17 @@ var beamMaterial : ShaderMaterial
 var beamParticles : GPUParticles3D
 var beamShader : Shader
 
-@export_category("Scoring System")
+@export_category("Score Box System")
 @export var scoreZone : Area3D  # Assign your scoring area
 @export var boxSpawnPoint : Marker3D  # Where boxes respawn
 @export var scoreSound : AudioStreamPlayer3D  # Optional sound effect
 @export var currentScore : int = 0
 var scoredObjects : Array[RigidBody3D] = []  # Track what we've scored
+
+@export_category("Destroy Box System")
+@export var destroyZone : Area3D
+@export var currentDestroyScore : int = 0
+var destroyedObjects : Array[RigidBody3D] = []
 
 @export_category("Holding Objects")
 @export var ThrowForce = 1.0
@@ -115,12 +120,18 @@ var scoredObjects : Array[RigidBody3D] = []  # Track what we've scored
 @export var dropBelowPlayer = false
 @export var GroundRay : RayCast3D
 
-@onready var interactRay = $CameraHolder/Camera/InteractRay
+@onready var interactRay = get_node_or_null("CameraHolder/Camera/InteractRay")
 var heldObject : RigidBody3D
 
 func _ready():
-	setup_beam_effect()
-	setup_scoring_system()
+	# Only run setup if required nodes exist
+	if gunMarker:
+		setup_beam_effect()
+	if scoreZone:
+		setup_scoring_system()
+	if destroyZone:
+		setup_destroying_system()
+	
 	#set move variables, and value references
 	moveSpeed = walkSpeed
 	moveAccel = walkAccel
@@ -130,6 +141,66 @@ func _ready():
 	jumpCooldownRef = jumpCooldown
 	nbJumpsInAirAllowedRef = nbJumpsInAirAllowed
 	coyoteJumpCooldownRef = coyoteJumpCooldown
+	
+	print("Player script loaded successfully!")
+
+func setup_destroying_system():
+	# Connect to destroy zone if assigned
+	if destroyZone:
+		# Make sure the Area3D is set up correctly
+		destroyZone.monitoring = true
+		destroyZone.monitorable = true
+		
+		# Connect the body_entered signal to our destroying function
+		if not destroyZone.body_entered.is_connected(_on_destroy_zone_entered):
+			destroyZone.body_entered.connect(_on_destroy_zone_entered)
+		print("Destroying system initialized! Current destroy score: ", currentDestroyScore)
+		print("Destroy zone monitoring: ", destroyZone.monitoring)
+	else:
+		print("Warning: Destroy Zone not assigned! Please assign an Area3D in the inspector.")
+
+func _on_destroy_zone_entered(body: Node3D):
+	print("Something entered destroy zone: ", body.name, " (Type: ", body.get_class(), ")")
+	
+	# Check if the body is a RigidBody3D
+	if body is RigidBody3D:
+		print("Detected RigidBody3D: ", body.name)
+		destroy_object(body as RigidBody3D)
+	else:
+		print("Object is not a RigidBody3D, ignoring.")
+
+func destroy_object(body: RigidBody3D):
+	print("Attempting to destroy object: ", body.name)
+	
+	# Prevent destroying the same object multiple times quickly
+	if body in destroyedObjects:
+		print("Object already destroyed recently, ignoring.")
+		return
+	
+	# Add to destroyed objects temporarily
+	destroyedObjects.append(body)
+	
+	# Remove from destroyed objects after a short delay to prevent double-destroying
+	get_tree().create_timer(0.5).timeout.connect(func(): destroyedObjects.erase(body))
+	
+	# Increase destroy score
+	currentDestroyScore += 1
+	print("DESTROYED! Current destroy score: ", currentDestroyScore)
+	
+	# Play sound effect if assigned
+	if scoreSound:
+		scoreSound.play()
+	
+	# If this was the held object, drop it from gravity gun
+	if body == heldObject:
+		print("Dropping held object from gravity gun")
+		drop_held_object()
+	
+	# Respawn the object at spawn point
+	if boxSpawnPoint:
+		respawn_object_at_spawn(body)
+	else:
+		print("Warning: Box Spawn Point not assigned! Object will not respawn.")
 
 func setup_scoring_system():
 	# Connect to score zone if assigned
@@ -185,11 +256,12 @@ func score_object(body: RigidBody3D):
 	
 	# Respawn the object at spawn point
 	if boxSpawnPoint:
-		respawn_object(body)
+		respawn_object_at_spawn(body)
 	else:
 		print("Warning: Box Spawn Point not assigned! Object will not respawn.")
 
-func respawn_object(body: RigidBody3D):
+# FIXED: Single respawn function used by both systems
+func respawn_object_at_spawn(body: RigidBody3D):
 	print("Respawning object: ", body.name)
 	
 	# Stop the object's movement
@@ -343,46 +415,77 @@ func update_beam_effect(delta: float):
 		hide_beam()
 		return
 	
-	# Show beam
+	# Get positions with validation
+	var gunPos = gunMarker.global_position
+	var objectPos = heldObject.global_position
+	
+	# Validate positions
+	if not gunPos.is_finite() or not objectPos.is_finite():
+		hide_beam()
+		return
+	
+	var distance = gunPos.distance_to(objectPos)
+	
+	# Check for valid distance (avoid zero/near-zero distances)
+	if distance < 0.01:
+		hide_beam()
+		return
+	
+	var direction = (objectPos - gunPos).normalized()
+	
+	# Validate direction vector
+	if not direction.is_finite() or direction.is_zero_approx():
+		hide_beam()
+		return
+	
+	# Show beam only if all validations pass
 	beamMesh.visible = true
 	if beamParticles:
 		beamParticles.visible = true
 		beamParticles.emitting = true
 	
-	# Get positions
-	var gunPos = gunMarker.global_position
-	var objectPos = heldObject.global_position
-	var distance = gunPos.distance_to(objectPos)
-	var direction = (objectPos - gunPos).normalized()
-	
-	# CRITICAL FIX: Position the beam so its bottom (-0.5 Y) is EXACTLY at gun marker
-	# Instead of centering the beam, we offset it so the gun end stays fixed
+	# Calculate beam center
 	var beam_center = gunPos + (direction * distance * 0.5)
 	
-	# Create the transform
+	# Final validation of beam center
+	if not beam_center.is_finite():
+		hide_beam()
+		return
+	
+	# Create safe transform
 	var up_vector = Vector3.UP
 	if abs(direction.dot(Vector3.UP)) > 0.99:
 		up_vector = Vector3.FORWARD
 	
+	# Use try-catch equivalent with validation
 	var beam_transform = Transform3D()
 	beam_transform.origin = beam_center
-	beam_transform = beam_transform.looking_at(beam_center + direction, up_vector)
-	beam_transform = beam_transform * Transform3D(Basis(Vector3.RIGHT, PI/2), Vector3.ZERO)
 	
-	# Apply transform and scale
-	beamMesh.global_transform = beam_transform
-	beamMesh.scale = Vector3(1, distance, 1)
-	
-	# The key insight: The mesh positioning makes the gun end stay at gunPos
-	# because we're scaling from center, so -0.5 * distance puts gun end at right spot
-	
-	# Update particles to match
-	if beamParticles:
-		beamParticles.global_transform = beam_transform  
-		beamParticles.scale = Vector3(1, distance, 1)
-		var processMaterial = beamParticles.process_material as ParticleProcessMaterial
-		if processMaterial:
-			processMaterial.emission_box_extents = Vector3(beamWidth, distance * 0.5, beamWidth)
+	# Safer looking_at calculation
+	var target_point = beam_center + direction
+	if target_point.is_finite() and not target_point.is_equal_approx(beam_center):
+		beam_transform = beam_transform.looking_at(target_point, up_vector)
+		beam_transform = beam_transform * Transform3D(Basis(Vector3.RIGHT, PI/2), Vector3.ZERO)
+		
+		# Validate final transform
+		if beam_transform.origin.is_finite() and beam_transform.basis.x.is_finite() and beam_transform.basis.y.is_finite() and beam_transform.basis.z.is_finite():
+			# Apply transform and scale
+			beamMesh.global_transform = beam_transform
+			beamMesh.scale = Vector3(1, distance, 1)
+			
+			# Update particles to match
+			if beamParticles:
+				beamParticles.global_transform = beam_transform  
+				beamParticles.scale = Vector3(1, distance, 1)
+				var processMaterial = beamParticles.process_material as ParticleProcessMaterial
+				if processMaterial:
+					processMaterial.emission_box_extents = Vector3(beamWidth, distance * 0.5, beamWidth)
+		else:
+			hide_beam()
+			return
+	else:
+		hide_beam()
+		return
 	
 	# Only update time for deformation
 	beam_time += delta
@@ -403,60 +506,73 @@ func set_held_object(body):
 		pass #play sound effect or smth
 
 func drop_held_object():
-	heldObject = null
+	if heldObject:
+		heldObject = null
 	hide_beam()
 
 func throw_held_object():
-	var obj = heldObject
-	drop_held_object()
-	obj.apply_central_impulse(-camera.global_transform.basis.z * ThrowForce * 10)
+	if heldObject:
+		var obj = heldObject
+		drop_held_object()
+		obj.apply_central_impulse(-camera.global_transform.basis.z * ThrowForce * 10)
 
 func handle_holding_objects():
-	if Input.is_action_just_pressed("throw"):
+	# Use direct key input instead of InputMap actions
+	if Input.is_key_pressed(KEY_E):  # E key for throw
 		if heldObject != null: 
 			throw_held_object()
-			if timer.is_stopped(): timer.start()
-	if Input.is_action_just_pressed("interact"):
+			if timer.is_stopped(): 
+				timer.start()
+	
+	if Input.is_key_pressed(KEY_F):  # F key for interact
 		if heldObject != null: 
 			drop_held_object()
-			if timer.is_stopped(): timer.start()
-	elif interactRay.is_colliding(): 
-		set_held_object(interactRay.get_collider())
+			if timer.is_stopped(): 
+				timer.start()
+		elif interactRay and interactRay.is_colliding(): 
+			set_held_object(interactRay.get_collider())
 		
 	if heldObject != null:
 		var targetPos = camera.global_transform.origin + (camera.global_basis * Vector3(0, 0, -FollowDistance))
 		var objectPos = heldObject.global_transform.origin
 		heldObject.linear_velocity = (targetPos - objectPos) * FollowSpeed
+		
 		if heldObject.global_position.distance_to(camera.global_position) > MaxDistanceFromCamera:
 			drop_held_object()
-		if dropBelowPlayer && GroundRay.is_colliding():
+		
+		if dropBelowPlayer && GroundRay && GroundRay.is_colliding():
 			if GroundRay.get_collider() == heldObject: 
 				drop_held_object()
 	
 func _process(delta: float):
 	displayProperties()
-	update_beam_effect(delta)  # NEW: Update beam every frame
+	# Temporarily disable beam effect to prevent errors
+	# update_beam_effect(delta)
 	
 func _physics_process(_delta : float):
 	modifyPhysicsProperties()
 	handle_holding_objects()
 	
+	# Now this will work since we extend CharacterBody3D
 	move_and_slide()
 	
 func displayProperties():
 	#display properties on the hud
 	if hud != null:
-		hud.displayCurrentState(stateMachine.currStateName)
+		if stateMachine and stateMachine.has_method("get_current_state"):
+			hud.displayCurrentState(stateMachine.get_current_state())
 		hud.displayDesiredMoveSpeed(desiredMoveSpeed)
 		hud.displayVelocity(velocity.length())
 		hud.displayNbJumpsInAirAllowed(nbJumpsInAirAllowed)
 		# Display current score - only if HUD has the method
 		if hud.has_method("displayScore"):
 			hud.displayScore(currentScore)
-		else:
-			# Print score to console instead if HUD doesn't support it
-			if currentScore > 0:
-				print("Score: ", currentScore)
+	
+	# Always print score to console as backup
+	if currentScore > 0:
+		print("Score: ", currentScore)
+	if currentDestroyScore > 0:
+		print("Destroy Score: ", currentDestroyScore)
 		
 func modifyPhysicsProperties():
 	lastFramePosition = position #get play char position every frame
@@ -466,5 +582,7 @@ func modifyPhysicsProperties():
 func gravityApply(delta : float):
 	#if play char goes up, apply jump gravity
 	#otherwise, apply fall gravity
-	if velocity.y >= 0.0: velocity.y += jumpGravity * delta
-	elif velocity.y < 0.0: velocity.y += fallGravity * delta
+	if velocity.y >= 0.0: 
+		velocity.y += jumpGravity * delta
+	elif velocity.y < 0.0: 
+		velocity.y += fallGravity * delta
