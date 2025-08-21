@@ -76,6 +76,7 @@ shader_parameter/transparency = 0.404
 
 [sub_resource type="BoxMesh" id="BoxMesh_pkg7o"]
 material = SubResource("ShaderMaterial_dwbse")
+size = Vector3(1.965, 2.95, 1.895)
 
 [sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_gbfbk"]
 
@@ -116,40 +117,10 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -11.4177, 0)
 [node name="aaaa_657" parent="Collison" index="657"]
 material_override = SubResource("StandardMaterial3D_tlwt5")
 
-[node name="PlayerCharacter" parent="." instance=ExtResource("2_tlwt5")]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.85811, 1.4618, -2.53481)
-desiredMoveSpeedCurve = null
-maxSpeed = 0.0
-inAirMoveSpeedCurve = null
-hitGroundCooldown = 0.0
-bunnyHopDmsIncre = 0.0
-baseHitboxHeight = 0.0
-baseModelHeight = 0.0
-heightChangeSpeed = 0.0
-crouchSpeed = 0.0
-crouchAccel = 0.0
-crouchDeccel = 0.0
-crouchHitboxHeight = 0.0
-crouchModelHeight = 0.0
-walkSpeed = 0.0
-walkAccel = 0.0
-walkDeccel = 0.0
-runSpeed = 0.0
-runAccel = 0.0
-runDeccel = 0.0
-jumpHeight = 0.0
-jumpTimeToPeak = 0.0
-jumpTimeToFall = 0.0
-jumpCooldown = 0.0
-nbJumpsInAirAllowed = 0
-coyoteJumpCooldown = 0.0
-moveForwardAction = ""
-moveBackwardAction = ""
-moveLeftAction = ""
-moveRightAction = ""
-runAction = ""
-crouchAction = ""
-jumpAction = ""
+[node name="PlayerCharacter" parent="." node_paths=PackedStringArray("scoreZone", "boxSpawnPoint") instance=ExtResource("2_tlwt5")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.85811, 0.92, -2.53481)
+scoreZone = NodePath("../DeliverBoxZone")
+boxSpawnPoint = NodePath("../Marker3D")
 
 [node name="BrownBox" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.14602, 0.723002, -6.99905)
@@ -185,14 +156,12 @@ shape = SubResource("ConcavePolygonShape3D_pkg7o")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.42272, 1.30553, -7.4075)
 
 [node name="DestroyBoxZone" type="Area3D" parent="."]
-transform = Transform3D(1.6, 0, 0, 0, 3, 0, 0, 0, 2, 0.82004, 1.60064, -9.75843)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82004, 1.60064, -9.75843)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="DestroyBoxZone"]
 mesh = SubResource("BoxMesh_pkg7o")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DestroyBoxZone"]
 shape = SubResource("ConcavePolygonShape3D_gbfbk")
-
-[connection signal="body_entered" from="DestroyBoxZone" to="PlayerCharacter" method="_on_destroy_zone_entered"]
 
 [editable path="Collison"]
