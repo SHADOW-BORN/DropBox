@@ -206,6 +206,90 @@ func respawn_object(body: RigidBody3D):
 	body.linear_velocity = Vector3(0, 2, 0)
 	
 	print("Object respawned successfully!")
+	
+	
+@export_category("Destroy System")
+@export var DestroyZone : Area3D  # Assign your scoring area
+@export var destroySound : AudioStreamPlayer3D  # Optional sound effect
+@export var boxCreatePoint : Marker3D
+@export var currentDestroyScore : int = 0
+var DestroyedObjects : Array[RigidBody3D] = []  # Track what we've scored
+
+func setup_destroy_system():
+	# Connect to score zone if assigned
+	if DestroyZone:
+		# Make sure the Area3D is set up correctly
+		DestroyZone.monitoring = true
+		DestroyZone.monitorable = true
+		
+		# Connect the body_entered signal to our scoring function
+		if not DestroyZone.body_entered.is_connected(_on_destroy_zone_entered):
+			DestroyZone.body_entered.connect(_on_destroy_zone_entered)
+		print("Scoring system initialized! Current score: ", currentDestroyScore)
+		print("Score zone monitoring: ", DestroyZone.monitoring)
+	else:
+		print("Warning: Score Zone not assigned! Please assign an Area3D in the inspector.")
+
+func _on_destroy_zone_entered(body: Node3D):
+	print("Something entered score zone: ", body.name, " (Type: ", body.get_class(), ")")
+	
+	# Check if the body is a RigidBody3D
+	if body is RigidBody3D:
+		print("Detected RigidBody3D: ", body.name)
+		destroy_object(body as RigidBody3D)
+	else:
+		print("Object is not a RigidBody3D, ignoring.")
+
+func destroy_object(body: RigidBody3D):
+	print("Attempting to score object: ", body.name)
+	
+	# Prevent scoring the same object multiple times quickly
+	if body in DestroyedObjects:
+		print("Object already scored recently, ignoring.")
+		return
+	
+	# Add to scored objects temporarily
+	DestroyedObjects.append(body)
+	
+	# Remove from scored objects after a short delay to prevent double-scoring
+	get_tree().create_timer(0.5).timeout.connect(func(): DestroyedObjects.erase(body))
+	
+	# Increase score
+	currentDestroyScore += 1
+	print("SCORE! Current score: ", currentDestroyScore)
+	
+	# Play sound effect if assigned
+	if destroySound:
+		destroySound.play()
+	
+	# If this was the held object, drop it from gravity gun
+	if body == heldObject:
+		print("Dropping held object from gravity gun")
+		drop_held_object()
+	
+	# Respawn the object at spawn point
+	if boxSpawnPoint:
+		create_object(body)
+	else:
+		print("Warning: Box Spawn Point not assigned! Object will not respawn.")
+
+func create_object(body: RigidBody3D):
+	print("Respawning object: ", body.name)
+	
+	# Stop the object's movement
+	body.linear_velocity = Vector3.ZERO
+	body.angular_velocity = Vector3.ZERO
+	
+	# Move to spawn point
+	body.global_position = boxSpawnPoint.global_position
+	body.global_rotation = boxSpawnPoint.global_rotation
+	
+	print("Object moved to spawn position: ", boxSpawnPoint.global_position)
+	
+	# Optional: Add a little upward velocity so it doesn't spawn inside the ground
+	body.linear_velocity = Vector3(0, 2, 0)
+	
+	print("Object respawned successfully!")
 
 func setup_beam_effect():
 	# Check if gun marker is assigned

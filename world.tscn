@@ -1,10 +1,11 @@
-[gd_scene load_steps=25 format=3 uid="uid://blyg7rlhs14cp"]
+[gd_scene load_steps=26 format=3 uid="uid://blyg7rlhs14cp"]
 
 [ext_resource type="PackedScene" uid="uid://4neetmi1j8cv" path="res://addons/Collison.glb" id="1_fj7yv"]
 [ext_resource type="Texture2D" uid="uid://c4uv37kffysl0" path="res://tanr-makina-factory-building/textures/photo-metal-texture-pattern.jpg" id="2_aqk2v"]
 [ext_resource type="PackedScene" uid="uid://bwggrf7sbmkcv" path="res://addons/PlayerCharacter/PlayerCharacterScene.tscn" id="2_tlwt5"]
 [ext_resource type="Shader" uid="uid://ddwv8s3jr7mbf" path="res://world.gdshader" id="4_aqk2v"]
 [ext_resource type="Shader" uid="uid://dgao74rx41xyo" path="res://DestroyBox.gdshader" id="5_036b0"]
+[ext_resource type="Script" uid="uid://f6dovmclnaoa" path="res://destroy_box_zone.gd" id="5_dwbse"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_036b0"]
 albedo_texture = ExtResource("2_aqk2v")
@@ -117,10 +118,40 @@ transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -11.4177, 0)
 [node name="aaaa_657" parent="Collison" index="657"]
 material_override = SubResource("StandardMaterial3D_tlwt5")
 
-[node name="PlayerCharacter" parent="." node_paths=PackedStringArray("scoreZone", "boxSpawnPoint") instance=ExtResource("2_tlwt5")]
+[node name="PlayerCharacter" parent="." instance=ExtResource("2_tlwt5")]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.85811, 0.92, -2.53481)
-scoreZone = NodePath("../DeliverBoxZone")
-boxSpawnPoint = NodePath("../Marker3D")
+desiredMoveSpeedCurve = null
+maxSpeed = 0.0
+inAirMoveSpeedCurve = null
+hitGroundCooldown = 0.0
+bunnyHopDmsIncre = 0.0
+baseHitboxHeight = 0.0
+baseModelHeight = 0.0
+heightChangeSpeed = 0.0
+crouchSpeed = 0.0
+crouchAccel = 0.0
+crouchDeccel = 0.0
+crouchHitboxHeight = 0.0
+crouchModelHeight = 0.0
+walkSpeed = 0.0
+walkAccel = 0.0
+walkDeccel = 0.0
+runSpeed = 0.0
+runAccel = 0.0
+runDeccel = 0.0
+jumpHeight = 0.0
+jumpTimeToPeak = 0.0
+jumpTimeToFall = 0.0
+jumpCooldown = 0.0
+nbJumpsInAirAllowed = 0
+coyoteJumpCooldown = 0.0
+moveForwardAction = ""
+moveBackwardAction = ""
+moveLeftAction = ""
+moveRightAction = ""
+runAction = ""
+crouchAction = ""
+jumpAction = ""
 
 [node name="BrownBox" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.14602, 0.723002, -6.99905)
@@ -157,6 +188,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.42272, 1.30553, -7.4075)
 
 [node name="DestroyBoxZone" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82004, 1.60064, -9.75843)
+script = ExtResource("5_dwbse")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="DestroyBoxZone"]
 mesh = SubResource("BoxMesh_pkg7o")
